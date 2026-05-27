@@ -1,19 +1,24 @@
-FROM php:8.4-apache
+# syntax=docker/dockerfile:1.7
+FROM golang:1.24-alpine AS builder
 
-RUN apt-get update && apt-get install -y libpng-dev \
-    && docker-php-ext-install gd \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
 
-RUN a2enmod rewrite \
- && sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
-
-WORKDIR /var/www/html
+COPY go.mod ./
+COPY go.sum* ./
+RUN go mod download
 
 COPY . .
 
-RUN chown -R www-data:www-data /var/www/html
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -trimpath \
+    -ldflags="-s -w" \
+    -o /out/server ./cmd/server
 
-EXPOSE 80
+FROM gcr.io/distroless/static-debian12:nonroot
 
-CMD ["apache2-foreground"]
+COPY --from=builder /out/server /server
 
+USER nonroot:nonroot
+EXPOSE 8080
+
+ENTRYPOINT ["/server"]

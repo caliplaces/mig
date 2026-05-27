@@ -1,1 +1,9 @@
-.idea/
+.git
+.github
+.idea
+.vscode
+bin
+*.md
+!README.md
+Makefile
+coverage.out
