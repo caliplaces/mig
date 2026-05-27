@@ -1,0 +1,202 @@
+openapi: 3.1.0
+info:
+  title: Muscle Group Image Generator
+  description: |
+    HTTP API that renders an anatomical body silhouette with one or more
+    muscle groups highlighted in arbitrary colors.
+
+    All endpoints use `GET`. Image endpoints return `image/png`; on error
+    they return `application/json` with an `{"error": "..."}` body.
+  version: 1.0.0
+  license:
+    name: See repository
+    url: https://github.com/caliplaces/mig
+
+servers:
+  - url: https://caliplaces-mig.up.railway.app
+    description: Production
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: meta
+    description: Metadata, discovery, and health
+  - name: images
+    description: Image generation endpoints
+
+paths:
+  /:
+    get:
+      tags: [meta]
+      summary: Welcome message
+      responses:
+        '200':
+          description: Plain text greeting
+          content:
+            text/plain:
+              schema: { type: string }
+
+  /healthz:
+    get:
+      tags: [meta]
+      summary: Liveness probe
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            text/plain:
+              schema: { type: string, example: ok }
+
+  /getMuscleGroups:
+    get:
+      tags: [meta]
+      summary: List supported muscle groups
+      responses:
+        '200':
+          description: Sorted list of muscle group identifiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+                example: [abductors, abs, adductors, biceps, chest, triceps]
+
+  /getBaseImage:
+    get:
+      tags: [images]
+      summary: Blank anatomical silhouette
+      parameters:
+        - $ref: '#/components/parameters/TransparentBackground'
+      responses:
+        '200':
+          description: PNG silhouette
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+
+  /getImage:
+    get:
+      tags: [images]
+      summary: Highlight one or more muscle groups in a single color
+      parameters:
+        - name: muscleGroups
+          in: query
+          required: true
+          description: Comma-separated muscle group identifiers
+          schema: { type: string }
+          example: chest,triceps
+        - name: color
+          in: query
+          required: false
+          description: |
+            Highlight color. Accepts hex (`FF0000`, `#FF0000`, `F00`, `#F00`)
+            or comma-separated RGB (`255,0,0`). When omitted, the source
+            highlight color is used.
+          schema: { type: string }
+          example: FF0000
+        - $ref: '#/components/parameters/TransparentBackground'
+      responses:
+        '200':
+          description: Composited PNG
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /getMulticolorImage:
+    get:
+      tags: [images]
+      summary: Highlight two sets of muscle groups in two different colors
+      parameters:
+        - name: primaryMuscleGroups
+          in: query
+          required: true
+          description: Comma-separated muscle group identifiers (drawn first)
+          schema: { type: string }
+          example: chest,triceps
+        - name: secondaryMuscleGroups
+          in: query
+          required: true
+          description: Comma-separated muscle group identifiers (drawn over primary)
+          schema: { type: string }
+          example: shoulders
+        - name: primaryColor
+          in: query
+          required: true
+          description: Hex or comma-separated RGB color
+          schema: { type: string }
+          example: FF0000
+        - name: secondaryColor
+          in: query
+          required: true
+          description: Hex or comma-separated RGB color
+          schema: { type: string }
+          example: 0000FF
+        - $ref: '#/components/parameters/TransparentBackground'
+      responses:
+        '200':
+          description: Composited PNG
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /getIndividualColorImage:
+    get:
+      tags: [images]
+      summary: Highlight each muscle group with its own color
+      parameters:
+        - name: muscleGroups
+          in: query
+          required: true
+          description: Comma-separated muscle group identifiers
+          schema: { type: string }
+          example: biceps,triceps,abs
+        - name: colors
+          in: query
+          required: true
+          description: |
+            Comma-separated hex or RGB colors. The count MUST equal
+            the count of `muscleGroups`.
+          schema: { type: string }
+          example: FF0000,00FF00,0000FF
+        - $ref: '#/components/parameters/TransparentBackground'
+      responses:
+        '200':
+          description: Composited PNG
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  parameters:
+    TransparentBackground:
+      name: transparentBackground
+      in: query
+      required: false
+      description: 1 for transparent background, 0 (default) for the solid base
+      schema:
+        type: integer
+        enum: [0, 1]
+        default: 0
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: 'unknown muscle group: foo'

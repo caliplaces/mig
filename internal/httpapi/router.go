@@ -16,6 +16,8 @@ func NewRouter(c *compositor.Compositor) http.Handler {
 
 	mux.HandleFunc("GET /{$}", h.root)
 	mux.HandleFunc("GET /healthz", h.health)
+	mux.HandleFunc("GET /openapi.yaml", h.openapiSpec)
+	mux.HandleFunc("GET /docs", h.swaggerUI)
 	mux.HandleFunc("GET /getMuscleGroups", h.getMuscleGroups)
 	mux.HandleFunc("GET /getBaseImage", h.getBaseImage)
 	mux.HandleFunc("GET /getImage", h.getImage)

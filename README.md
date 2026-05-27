@@ -36,6 +36,8 @@ backward compatibility with existing clients.
 | `/getMulticolorImage` | Highlight two sets of groups in two different colors |
 | `/getIndividualColorImage` | Assign a distinct color to each group |
 | `/healthz` | Liveness probe (returns `ok`) |
+| `/openapi.yaml` | OpenAPI 3.1 spec |
+| `/docs` | Interactive Swagger UI |
 
 ### Query parameters
 

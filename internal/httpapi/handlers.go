@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/caliplaces/mig/internal/compositor"
+	"github.com/caliplaces/mig/internal/docs"
 )
 
 type handlers struct {
@@ -25,6 +26,16 @@ func (h *handlers) root(w http.ResponseWriter, _ *http.Request) {
 func (h *handlers) health(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("ok"))
+}
+
+func (h *handlers) openapiSpec(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/yaml; charset=utf-8")
+	_, _ = w.Write(docs.Spec)
+}
+
+func (h *handlers) swaggerUI(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(docs.SwaggerUI))
 }
 
 func (h *handlers) getMuscleGroups(w http.ResponseWriter, _ *http.Request) {

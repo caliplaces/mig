@@ -1,6 +1,7 @@
 package httpapi_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"image/png"
 	"io"
@@ -230,6 +231,37 @@ func TestCORSHeader(t *testing.T) {
 	defer resp.Body.Close()
 	if got := resp.Header.Get("Access-Control-Allow-Origin"); got != "*" {
 		t.Fatalf("ACAO=%q", got)
+	}
+}
+
+func TestOpenAPISpec(t *testing.T) {
+	ts := newTestServer(t)
+	resp, err := http.Get(ts.URL + "/openapi.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status=%d", resp.StatusCode)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	if !bytes.Contains(body, []byte("openapi:")) {
+		t.Fatalf("spec missing openapi key, got first 80 bytes: %q", body[:min(80, len(body))])
+	}
+}
+
+func TestSwaggerUI(t *testing.T) {
+	ts := newTestServer(t)
+	resp, err := http.Get(ts.URL + "/docs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status=%d", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct[:9] != "text/html" {
+		t.Fatalf("content-type=%q", ct)
 	}
 }
 
