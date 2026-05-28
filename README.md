@@ -115,3 +115,10 @@ That's it — no Apache, no MPM, no PHP, no surprises.
 
 Forked from [MertenD/gym-api](https://github.com/MertenD/gym-api) (original
 PHP implementation). All PNG assets © their original authors.
+
+## License
+
+Licensed under the [GNU Affero General Public License v3.0](LICENSE)
+(AGPL-3.0-or-later). If you run a modified version of this software to
+provide a network service, you must make the corresponding source code
+available to its users under the same license.
